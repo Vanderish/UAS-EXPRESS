@@ -1,0 +1,4 @@
+node_modules
+.env
+perbankan.sql
+package-lock.json
