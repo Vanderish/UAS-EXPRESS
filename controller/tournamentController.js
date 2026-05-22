@@ -58,52 +58,61 @@ const generateBracket = async (req, res) => {
         const queryPeserta = 'SELECT * FROM peserta WHERE room_id = ?';
         const [participants] = await db.execute(queryPeserta, [id]);
 
-        // Biar bentuk bracketnya sempurna seperti di gambar, jumlah peserta 
-        // idealnya adalah kelipatan 2 (4, 8, 16, 32).
         if (participants.length < 2) {
             return res.status(400).json({ error: 'Peserta minimal 2 orang.' });
         }
 
-        // --- 1. SHUFFLE PESERTA (Hanya dilakukan di awal) ---
+        // --- 1. CARI PANGKAT 2 TERDEKAT (Target Slot) ---
+        // Kalau peserta 6, targetnya jadi 8. Kalau peserta 11, targetnya 16.
+        let targetSlots = 2;
+        while (targetSlots < participants.length) {
+            targetSlots *= 2;
+        }
+
+        // --- 2. BIKIN "PESERTA HANTU" (BYE) ---
+        const numByes = targetSlots - participants.length;
         const shuffledParticipants = [...participants];
+        
+        // Masukkan objek dummy dengan id null
+        for (let i = 0; i < numByes; i++) {
+            shuffledParticipants.push({ id: null, nama_peserta: 'BYE' });
+        }
+
+        // --- 3. SHUFFLE TOTAL (Peserta Asli + Peserta Hantu) ---
         for (let i = shuffledParticipants.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [shuffledParticipants[i], shuffledParticipants[j]] = [shuffledParticipants[j], shuffledParticipants[i]];
         }
 
         const matchesToInsert = [];
-
-        // --- 2. BIKIN SLOT BABAK 1 (Isi dengan pemain asli) ---
-        let jumlahMatchBabakIni = 0;
-        for (let i = 0; i < shuffledParticipants.length; i += 2) {
+        
+        // --- 4. BIKIN SLOT BABAK 1 (Akan ada yang melawan NULL/BYE) ---
+        for (let i = 0; i < targetSlots; i += 2) {
             matchesToInsert.push({
                 babak: 1,
                 pemain1_id: shuffledParticipants[i].id,
-                pemain2_id: shuffledParticipants[i + 1] ? shuffledParticipants[i + 1].id : null
+                pemain2_id: shuffledParticipants[i + 1].id
             });
-            jumlahMatchBabakIni++;
         }
 
-        // --- 3. BIKIN SLOT BABAK SELANJUTNYA (Isi dengan NULL / TBD) ---
-        // Logikanya: Jumlah match di babak selanjutnya adalah setengah dari babak sebelumnya
+        // --- 5. BIKIN SLOT BABAK SELANJUTNYA (Bagan Sempurna) ---
         let babakSekarang = 2;
+        let sisaMatch = targetSlots / 2; // Pasti pas dibagi 2!
         
-        while (jumlahMatchBabakIni > 1) {
-            let matchDiBabakSelanjutnya = Math.ceil(jumlahMatchBabakIni / 2);
+        while (sisaMatch > 1) {
+            sisaMatch = sisaMatch / 2;
             
-            for (let i = 0; i < matchDiBabakSelanjutnya; i++) {
+            for (let i = 0; i < sisaMatch; i++) {
                 matchesToInsert.push({
                     babak: babakSekarang,
                     pemain1_id: null,
                     pemain2_id: null
                 });
             }
-            
-            jumlahMatchBabakIni = matchDiBabakSelanjutnya; // Update sisa match untuk di-loop lagi
             babakSekarang++;
         }
 
-        // --- 4. EKSEKUSI DATABASE ---
+        // --- 6. EKSEKUSI DATABASE ---
         const connection = await db.getConnection(); 
         try {
             await connection.beginTransaction(); 
@@ -115,10 +124,7 @@ const generateBracket = async (req, res) => {
 
             const insertPromises = matchesToInsert.map(match => {
                 return connection.execute(insertMatchQuery, [
-                    id,
-                    match.babak,       // <-- Sekarang babaknya dinamis (1, 2, 3, dst)
-                    match.pemain1_id,
-                    match.pemain2_id 
+                    id, match.babak, match.pemain1_id, match.pemain2_id 
                 ]);
             });
 
@@ -130,9 +136,8 @@ const generateBracket = async (req, res) => {
             await connection.commit(); 
 
             res.status(201).json({ 
-                message: 'Bagan penuh berhasil di-generate!', 
-                totalPertandingan: matchesToInsert.length,
-                pasangan: matchesToInsert
+                message: 'Bagan berstandar turnamen berhasil di-generate!', 
+                totalPertandingan: matchesToInsert.length
             });
 
         } catch (transactionError) {
