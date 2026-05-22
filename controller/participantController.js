@@ -14,7 +14,7 @@ const getParticipantsByRoomId = async (req, res) => {
 
 const addParticipant = async (req, res) => {
     const { nama_peserta } = req.body;
-    const room_id = req.params; 
+    const { room_id } = req.params; 
 
     try {
         if (!nama_peserta || nama_peserta.trim() === '') {
