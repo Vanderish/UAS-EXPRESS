@@ -1,6 +1,12 @@
 import 'dotenv/config';
 import mysql from 'mysql2/promise';
 
+console.log("=== CCTV RENDER ===");
+console.log("HOST:", process.env.DB_HOST);
+console.log("USER:", process.env.DB_USER);
+console.log("PORT:", process.env.DB_PORT);
+console.log("===================");
+
 const db = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
