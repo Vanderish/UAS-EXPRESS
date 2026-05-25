@@ -5,6 +5,7 @@ import auth from '../middleware/jwt.js';
 const router = express.Router();
 
 router.get('/', tournamentController.getAllTournaments);
+router.get('/stats', tournamentController.getStats);
 router.get('/:id', tournamentController.getTournamentDetails);
 router.post('/', auth.getToken, auth.checkPanitia, tournamentController.createTournament);
 router.post('/generate-bracket/:id', auth.getToken, auth.checkPanitia, tournamentController.generateBracket);

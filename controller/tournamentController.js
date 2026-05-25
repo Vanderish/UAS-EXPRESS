@@ -153,9 +153,33 @@ const generateBracket = async (req, res) => {
     }
 };
 
+const getStats = async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                (SELECT COUNT(*) FROM tournaments) AS total_tournaments,
+                (SELECT COUNT(*) FROM participants) AS total_participants,
+                (SELECT COUNT(*) FROM matches) AS total_matches
+        `;
+        
+        const [rows] = await db.query(query);
+
+        res.json({
+            tournaments: rows[0].total_tournaments,
+            participants: rows[0].total_participants,
+            matches: rows[0].total_matches
+        });
+
+    } catch (error) {
+        console.error('Error fetching stats:', error);
+        res.status(500).json({ error: 'Gagal mengambil statistik' });
+    }
+}
+
 export default {
     createTournament,
     getAllTournaments,
     getTournamentDetails,
+    getStats,
     generateBracket
 };
