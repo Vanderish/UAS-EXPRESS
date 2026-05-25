@@ -1,4 +1,5 @@
 import db from '../config/db.js';
+import QRCode from 'qrcode';
 
 const getParticipantsByRoomId = async (req, res) => {
     const { room_id } = req.params;
@@ -70,4 +71,46 @@ const updateParticipant = async (req, res) => {
     }
 };
 
-export default { addParticipant, deleteParticipant, updateParticipant, getParticipantsByRoomId };
+const generateRoomQr = async (req, res) => {
+    const { room_id } = req.params;
+
+    try {
+        const queryCheck = 'SELECT id, status FROM rooms WHERE id = ?';
+        const [room] = await db.execute(queryCheck, [room_id]);
+
+        if (room.length === 0) {
+            return res.status(404).json({ error: 'Turnamen tidak ditemukan!' });
+        }
+
+        if (room[0].status !== 'pendaftaran') {
+            return res.status(400).json({ error: 'Turnamen ini sudah tidak menerima peserta baru!' });
+        }
+
+        // AMBIL BASE URL DARI FILE .env
+        // Pakai fallback ke localhost buat jaga-jaga kalau lupa nulis di .env
+        const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const frontendUrl = `${baseUrl}/daftar-turnamen/${room_id}`;
+
+        const qrCodeBase64 = await QRCode.toDataURL(frontendUrl, {
+            errorCorrectionLevel: 'H',
+            margin: 2,
+            width: 300,
+            color: {
+                dark: '#000000',
+                light: '#FFFFFF'
+            }
+        });
+
+        res.status(200).json({
+            message: 'QR Code berhasil dibuat!',
+            url_tujuan: frontendUrl,
+            qr_image: qrCodeBase64 
+        });
+
+    } catch (error) {
+        console.error('Error generating QR Code:', error);
+        res.status(500).json({ error: 'Internal server error saat membuat QR Code' });
+    }
+};
+
+export default { addParticipant, deleteParticipant, updateParticipant, getParticipantsByRoomId, generateRoomQr };

@@ -202,6 +202,31 @@ export async function updateMatchResult(id, matchData, token) {
     }
 }
 
+// qr
+export async function getRoomQRCode(roomId, token) {
+    try {
+        const response = await fetch(`/api/participants/qr/${roomId}`, {
+            method: 'GET',
+            headers: {
+                // Wajib ngirim token karena ini khusus panitia
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Gagal mengambil QR Code');
+        }
+
+        const data = await response.json();
+        return data; 
+        // Nanti di frontend kamu tinggal panggil: data.qr_image
+    } catch (error) {
+        console.error('Error fetching QR Code:', error);
+        return null;
+    }
+}
+
 
 
 
