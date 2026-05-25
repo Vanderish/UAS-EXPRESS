@@ -1,21 +1,16 @@
 import mysql from 'mysql2/promise';
 
-const db = await mysql.createPool({
-  host: 'localhost',
-  user: 'fedora',
-  password: '123',
-  database: 'chess_tournament',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+const db = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT || 4000,
+    // INI BAGIAN PALING PENTING UNTUK TIDB SERVERLESS
+    ssl: {
+        minVersion: 'TLSv1.2',
+        rejectUnauthorized: true
+    }
 });
-
-db.getConnection()
-  .then(() => {
-    console.log('✅ Database MySQL berhasil terkoneksi!');
-  })
-  .catch((err) => {
-    console.error('❌ Gagal konek ke database:', err);
-  });
 
 export default db;
