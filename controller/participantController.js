@@ -34,17 +34,41 @@ const addParticipant = async (req, res) => {
 };
 
 const deleteParticipant = async (req, res) => {
-    const { id } = req.params;
+    // Ini id pesertanya, bukan id turnamen
+    const { id } = req.params; 
 
     try {
-        const [result] = await db.execute('DELETE FROM peserta WHERE id = ?', [id]);
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Participant not found' });
+        // 1. Cari tahu peserta ini terdaftar di turnamen mana
+        const queryPeserta = 'SELECT room_id FROM peserta WHERE id = ?';
+        const [peserta] = await db.execute(queryPeserta, [id]);
+
+        if (peserta.length === 0) {
+            return res.status(404).json({ error: 'Peserta tidak ditemukan!' });
         }
-        res.status(200).json({ message: 'Participant deleted successfully' });
+
+        const roomId = peserta[0].room_id;
+
+        // 2. Cek apakah turnamen masih fase pendaftaran
+        const queryRoom = 'SELECT status FROM rooms WHERE id = ?';
+        const [room] = await db.execute(queryRoom, [roomId]);
+
+        if (room.length === 0) {
+             return res.status(404).json({ error: 'Turnamen tidak ditemukan!' });
+        }
+
+        if (room[0].status !== 'pendaftaran') {
+            return res.status(400).json({ error: 'Tidak bisa Kick peserta! Turnamen sudah berjalan atau selesai.' });
+        }
+
+        // 3. Eksekusi Hapus
+        const queryDelete = 'DELETE FROM peserta WHERE id = ?';
+        await db.execute(queryDelete, [id]);
+
+        res.status(200).json({ message: 'Peserta berhasil di-kick dari ruang pendaftaran!' });
+
     } catch (error) {
-        console.error('Error deleting participant:', error);
-        res.status(500).json({ error: 'Failed to delete participant' });
+        console.error('Error menghapus peserta:', error);
+        res.status(500).json({ error: 'Internal server error saat menghapus peserta' });
     }
 };
 

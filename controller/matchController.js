@@ -99,8 +99,75 @@ const updateMatchResult = async (req, res) => {
     }
 };
 
+const undoMatchResult = async (req, res) => {
+    const { id } = req.params;
+
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        const queryCheck = 'SELECT room_id, babak, pemenang_id FROM pertandingan WHERE id = ?';
+        const [currentMatch] = await connection.execute(queryCheck, [id]);
+
+        if (currentMatch.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ error: 'Pertandingan tidak ditemukan!' });
+        }
+
+        const { room_id, babak, pemenang_id } = currentMatch[0];
+
+        if (!pemenang_id) {
+            await connection.rollback();
+            return res.status(400).json({ error: 'Belum ada pemenang di pertandingan ini, tidak ada yang bisa di-undo!' });
+        }
+
+        // 1. Cabut gelar pemenang di match saat ini
+        const queryUndoPemenang = 'UPDATE pertandingan SET pemenang_id = NULL WHERE id = ?';
+        await connection.execute(queryUndoPemenang, [id]);
+
+        // 2. Cari slot masa depan di babak selanjutnya untuk dihapus
+        const queryCurrentRound = 'SELECT id FROM pertandingan WHERE room_id = ? AND babak = ? ORDER BY id ASC';
+        const [matchesCurrentRound] = await connection.execute(queryCurrentRound, [room_id, babak]);
+        const currentIndex = matchesCurrentRound.findIndex(match => match.id === parseInt(id));
+
+        if (currentIndex !== -1) {
+            const babakBerikutnya = babak + 1;
+            const queryNextRound = 'SELECT id FROM pertandingan WHERE room_id = ? AND babak = ? ORDER BY id ASC';
+            const [matchesNextRound] = await connection.execute(queryNextRound, [room_id, babakBerikutnya]);
+
+            if (matchesNextRound.length > 0) {
+                const targetIndex = Math.floor(currentIndex / 2);
+                const targetMatch = matchesNextRound[targetIndex];
+
+                if (targetMatch) {
+                    const kolomTarget = (currentIndex % 2 === 0) ? 'pemain1_id' : 'pemain2_id';
+                    
+                    // Kosongkan slot tersebut. Sekalian paksa pemenang_id jadi NULL untuk mencegah bug kalau ternyata match depannya udah ada hasil.
+                    const queryUndoSlot = `UPDATE pertandingan SET ${kolomTarget} = NULL, pemenang_id = NULL WHERE id = ?`;
+                    await connection.execute(queryUndoSlot, [targetMatch.id]);
+                }
+            } else {
+                // Kalau yang di-undo adalah partai Final, kembalikan status turnamen jadi 'berjalan'
+                const updateStatusQuery = "UPDATE rooms SET status = 'berjalan' WHERE id = ?";
+                await connection.execute(updateStatusQuery, [room_id]);
+            }
+        }
+
+        await connection.commit();
+        res.status(200).json({ message: 'Hasil pertandingan berhasil dibatalkan!' });
+
+    } catch (error) {
+        await connection.rollback();
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error saat undo hasil' });
+    } finally {
+        connection.release();
+    }
+};
+
 export default {
     getMatchesByTournament,
     getMatchDetails,
-    updateMatchResult
+    updateMatchResult,
+    undoMatchResult
 };
