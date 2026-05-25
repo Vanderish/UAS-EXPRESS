@@ -1,7 +1,11 @@
+// PERUBAHAN: Tambah BASE_URL agar link API fleksibel (localhost/render)
+const BASE_URL = 'https://betournament.onrender.com'; 
+
 // crud participnants
 export async function getParticipants(id) {
     try{
-        const response = await fetch(`/api/participants/${id}`);
+        // PERUBAHAN: Menyisipkan ${BASE_URL} di semua route fetch
+        const response = await fetch(`${BASE_URL}/api/participants/${id}`);
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
@@ -14,7 +18,7 @@ export async function getParticipants(id) {
 }
 export async function addParticipant(participantData) {
     try {
-        const response = await fetch('/api/participants', {
+        const response = await fetch(`${BASE_URL}/api/participants`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -33,7 +37,7 @@ export async function addParticipant(participantData) {
 }
 export async function deleteParticipant(id) {
     try {
-        const response = await fetch(`/api/participants/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/participants/${id}`, {
             method: 'DELETE'
         });
         if (!response.ok) {
@@ -48,7 +52,7 @@ export async function deleteParticipant(id) {
 }
 export async function updateParticipant(id, participantData) {
     try {
-        const response = await fetch(`/api/participants/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/participants/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -70,7 +74,7 @@ export async function updateParticipant(id, participantData) {
 // 1. Ambil semua turnamen (GET) - Rute Bebas
 export async function getAllTournaments() {
     try {
-        const response = await fetch('/api/tournaments', {
+        const response = await fetch(`${BASE_URL}/api/tournaments`, {
             method: 'GET'
         });
         
@@ -88,7 +92,7 @@ export async function getAllTournaments() {
 // 2. Ambil detail satu turnamen (GET) - Rute Bebas
 export async function getTournamentDetails(id) {
     try {
-        const response = await fetch(`/api/tournaments/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/tournaments/${id}`, {
             method: 'GET'
         });
         
@@ -106,7 +110,7 @@ export async function getTournamentDetails(id) {
 // 3. Buat turnamen baru (POST) - Rute Terkunci (Wajib Token)
 export async function createTournament(tournamentData, token) {
     try {
-        const response = await fetch('/api/tournaments', {
+        const response = await fetch(`${BASE_URL}/api/tournaments`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -130,7 +134,7 @@ export async function createTournament(tournamentData, token) {
 // 4. Generate bagan pertandingan (POST) - Rute Terkunci (Wajib Token)
 export async function generateBracket(id, token) {
     try {
-        const response = await fetch(`/api/tournaments/generate-bracket/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/tournaments/generate-bracket/${id}`, {
             method: 'POST',
             headers: {
                 // Walaupun nggak ngirim body JSON, token tetep wajib dikirim!
@@ -153,7 +157,7 @@ export async function generateBracket(id, token) {
 // crud matches
 export async function getMatchesByTournament(tournamentId) {
     try {
-        const response = await fetch(`/api/matches/tournament/${tournamentId}`, {
+        const response = await fetch(`${BASE_URL}/api/matches/tournament/${tournamentId}`, {
             method: 'GET'
         });
         if (!response.ok) {
@@ -168,7 +172,7 @@ export async function getMatchesByTournament(tournamentId) {
 }
 export async function getMatchDetails(id) {
     try {
-        const response = await fetch(`/api/matches/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/matches/${id}`, {
             method: 'GET'
         });
         if (!response.ok) {
@@ -183,7 +187,7 @@ export async function getMatchDetails(id) {
 }
 export async function updateMatchResult(id, matchData, token) {
     try {
-        const response = await fetch(`/api/matches/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/matches/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -205,7 +209,7 @@ export async function updateMatchResult(id, matchData, token) {
 // qr
 export async function getRoomQRCode(roomId, token) {
     try {
-        const response = await fetch(`/api/participants/qr/${roomId}`, {
+        const response = await fetch(`${BASE_URL}/api/participants/qr/${roomId}`, {
             method: 'GET',
             headers: {
                 // Wajib ngirim token karena ini khusus panitia
@@ -227,32 +231,10 @@ export async function getRoomQRCode(roomId, token) {
     }
 }
 
-
-
-
 // auth
-// export async function login(username, password) {
-//     try {
-//         const response = await fetch('/api/auth/login', {
-//             method: 'POST',
-//             headers: {
-//                 'Content-Type': 'application/json'
-//             },
-//             body: JSON.stringify({ username, password })
-//         });
-//         if (!response.ok) {
-//             throw new Error('Network response was not ok');
-//         }
-//         const result = await response.json();
-//         return result;
-//     } catch (error) {
-//         console.error('Error during login:', error);
-//         return null;
-//     }
-// }
 export async function register(username, password) {
     try {
-        const response = await fetch('/api/auth/register', {
+        const response = await fetch(`${BASE_URL}/api/auth/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -270,8 +252,9 @@ export async function register(username, password) {
     }
 }
 // jwt login
-async function login(username, password) {
-    const response = await fetch('/api/auth/login', {
+// PERUBAHAN: Menambahkan 'export' di depan fungsi login agar bisa dipanggil di luar file ini
+export async function login(username, password) {
+    const response = await fetch(`${BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
