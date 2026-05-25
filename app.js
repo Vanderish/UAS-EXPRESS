@@ -36,6 +36,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/participants', participantRoutes);
 app.use('/', renderRoutes);
 
-app.listen(3000, () => {
-    console.log('Server is running on port 3000');
-})
+// Ambil port dari server Render, TAPI kalau lagi di laptop (lokal), pakai 3000
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
