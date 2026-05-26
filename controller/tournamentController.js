@@ -158,8 +158,8 @@ const getStats = async (req, res) => {
         const query = `
             SELECT 
                 (SELECT COUNT(*) FROM rooms) AS total_tournaments,
-                (SELECT COUNT(*) FROM participants) AS total_participants,
-                (SELECT COUNT(*) FROM matches) AS total_matches
+                (SELECT COUNT(*) FROM peserta) AS total_participants,
+                (SELECT COUNT(*) FROM pertandingan) AS total_matches
         `;
         
         const [rows] = await db.query(query);
