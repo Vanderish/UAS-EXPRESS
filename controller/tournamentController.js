@@ -27,7 +27,7 @@ const getAllTournaments = async (req, res) => {
         const query = `
             SELECT 
                 r.*, 
-                (SELECT COUNT(*) FROM participants p WHERE p.room_id = r.id) AS total_peserta
+                (SELECT COUNT(*) FROM peserta p WHERE p.room_id = r.id) AS total_peserta
             FROM rooms r
             ORDER BY r.id DESC
         `;
