@@ -10,7 +10,6 @@ import tournamentRoutes from './routes/tournaments.js';
 import matchRoutes from './routes/matches.js';
 import authRoutes from './routes/auth.js';
 import participantRoutes from './routes/participants.js';
-import renderRoutes from './routes/render.js';
 import auth from './middleware/jwt.js';
 
 const app = express();
@@ -34,9 +33,12 @@ app.use('/api/tournaments', tournamentRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/participants', participantRoutes);
-app.use('/', renderRoutes);
+app.get('/', (req, res) => {
+    res.status(200).json({ 
+        status: "success"
+    });
+});
 
-// Ambil port dari server Render, TAPI kalau lagi di laptop (lokal), pakai 3000
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
