@@ -24,7 +24,14 @@ const createTournament = async (req, res) => {
 
 const getAllTournaments = async (req, res) => {
     try {
-        const query = 'SELECT * FROM rooms ORDER BY id DESC';
+        const query = `
+            SELECT 
+                r.*, 
+                (SELECT COUNT(*) FROM participants p WHERE p.room_id = r.id) AS total_peserta
+            FROM rooms r
+            ORDER BY r.id DESC
+        `;
+        
         const [rows] = await db.execute(query);
         res.status(200).json(rows);
     } catch (error) {
