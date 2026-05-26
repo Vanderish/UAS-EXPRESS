@@ -157,7 +157,7 @@ const getStats = async (req, res) => {
     try {
         const query = `
             SELECT 
-                (SELECT COUNT(*) FROM tournaments) AS total_tournaments,
+                (SELECT COUNT(*) FROM rooms) AS total_tournaments,
                 (SELECT COUNT(*) FROM participants) AS total_participants,
                 (SELECT COUNT(*) FROM matches) AS total_matches
         `;
