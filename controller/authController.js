@@ -64,7 +64,7 @@ const authRegister = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const queryInsert = "INSERT INTO users (username, password, role, foto_profil) VALUES (?, ?, 'pengguna', 'default-avatar.png')";
+        const queryInsert = "INSERT INTO users (username, password, foto_profil) VALUES (?, ?, 'default-avatar.png')";
         const [result] = await db.execute(queryInsert, [username, hashedPassword]);
 
         res.status(201).json({ 
