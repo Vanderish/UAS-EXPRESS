@@ -18,12 +18,4 @@ const getToken = (req, res, next) => {
     }
 };
 
-const checkPanitia = (req, res, next) => {
-    if (req.user && req.user.role === 'panitia') {
-        next(); 
-    } else {
-        return res.status(403).json({ error: 'Access denied. This feature is for panitia only.' });
-    }
-};
-
-export default { getToken, checkPanitia };
+export default { getToken };

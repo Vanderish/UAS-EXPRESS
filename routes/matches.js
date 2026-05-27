@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.get('/tournament/:tournamentId', matchController.getMatchesByTournament);
 router.get('/:id', matchController.getMatchDetails);
-router.put('/:id', auth.getToken, auth.checkPanitia, matchController.updateMatchResult);
-router.put('/:id/undo', auth.getToken, auth.checkPanitia, matchController.undoMatchResult); 
+router.put('/:id', auth.getToken, matchController.updateMatchResult);
+router.put('/:id/undo', auth.getToken, matchController.undoMatchResult); 
 
 export default router;
