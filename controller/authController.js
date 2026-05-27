@@ -51,7 +51,7 @@ const authRegister = async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-        return res.status(400).json({ error: 'Username dan password wajib diisi!' });
+        return res.status(400).json({ error: 'Username and password must be filled!' });
     }
 
     try {
@@ -59,7 +59,7 @@ const authRegister = async (req, res) => {
         const [existingUser] = await db.execute(queryCheck, [username]);
 
         if (existingUser.length > 0) {
-            return res.status(409).json({ error: 'Username sudah terdaftar!' });
+            return res.status(409).json({ error: 'Username already registered!' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -68,8 +68,8 @@ const authRegister = async (req, res) => {
         const [result] = await db.execute(queryInsert, [username, hashedPassword]);
 
         res.status(201).json({ 
-            message: 'Akun berhasil didaftarkan!', 
-            userId: result.insertId 
+            message: 'Account registered successfully!', 
+            userId: result.insertId
         });
 
     } catch (error) {
