@@ -113,7 +113,7 @@ const generateRoomQr = async (req, res) => {
         // AMBIL BASE URL DARI FILE .env
         // Pakai fallback ke localhost buat jaga-jaga kalau lupa nulis di .env
         const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5501';
-        const frontendUrl = `${baseUrl}/daftar-turnamen/${room_id}`;
+        const frontendUrl = `${baseUrl}/daftar-turnamen.html?id=${room_id}`;
 
         const qrCodeBase64 = await QRCode.toDataURL(frontendUrl, {
             errorCorrectionLevel: 'H',
