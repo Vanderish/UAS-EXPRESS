@@ -62,6 +62,14 @@ const generateBracket = async (req, res) => {
     const { id } = req.params; 
 
     try {
+        const checkStatusQuery = 'SELECT status FROM rooms WHERE id = ?';
+        const [roomData] = await db.execute(checkStatusQuery, [id]);
+
+        if (roomData.length === 0) return res.status(404).json({ error: 'Turnamen tidak ditemukan' });
+        if (roomData[0].status === 'berjalan') {
+            return res.status(400).json({ error: 'Bagan sudah pernah dibuat untuk turnamen ini!' });
+        }
+
         const queryPeserta = 'SELECT * FROM peserta WHERE room_id = ?';
         const [participants] = await db.execute(queryPeserta, [id]);
 
