@@ -183,10 +183,35 @@ const getStats = async (req, res) => {
     }
 }
 
+const deleteTournament = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const deleteMatchesQuery = 'DELETE FROM pertandingan WHERE room_id = ?';
+        await db.execute(deleteMatchesQuery, [id]);
+
+        const deleteParticipantsQuery = 'DELETE FROM peserta WHERE room_id = ?';
+        await db.execute(deleteParticipantsQuery, [id]);
+
+        const deleteRoomQuery = 'DELETE FROM rooms WHERE id = ?';
+        const [result] = await db.execute(deleteRoomQuery, [id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Turnamen tidak ditemukan!' });
+        }
+
+        res.json({ message: 'Turnamen berhasil dihapus!' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
 export default {
     createTournament,
     getAllTournaments,
     getTournamentDetails,
     generateBracket,
-    getStats
+    getStats,
+    deleteTournament
 };

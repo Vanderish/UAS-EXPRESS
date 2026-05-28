@@ -9,5 +9,6 @@ router.get('/stats', tournamentController.getStats);
 router.get('/:id', tournamentController.getTournamentDetails);
 router.post('/', auth.getToken, tournamentController.createTournament);
 router.post('/generate-bracket/:id', auth.getToken, tournamentController.generateBracket);
+router.delete('/:id', auth.getToken, tournamentController.deleteTournament);
 
 export default router;
