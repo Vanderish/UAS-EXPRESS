@@ -62,6 +62,7 @@ const generateBracket = async (req, res) => {
     const { id } = req.params; 
 
     try {
+        // --- 1. VALIDASI STATUS ROOM ---
         const checkStatusQuery = 'SELECT status FROM rooms WHERE id = ?';
         const [roomData] = await db.execute(checkStatusQuery, [id]);
 
@@ -77,42 +78,50 @@ const generateBracket = async (req, res) => {
             return res.status(400).json({ error: 'Peserta minimal 2 orang.' });
         }
 
-        // --- 1. CARI PANGKAT 2 TERDEKAT (Target Slot) ---
-        // Kalau peserta 6, targetnya jadi 8. Kalau peserta 11, targetnya 16.
+        // --- 2. CARI PANGKAT 2 TERDEKAT (Target Slot) ---
         let targetSlots = 2;
         while (targetSlots < participants.length) {
             targetSlots *= 2;
         }
 
-        // --- 2. BIKIN "PESERTA HANTU" (BYE) ---
-        const numByes = targetSlots - participants.length;
+        // --- 3. SHUFFLE PESERTA ASLI DULU ---
+        // (Kita tidak lagi memasukkan BYE ke dalam array untuk di-shuffle bareng)
         const shuffledParticipants = [...participants];
-        
-        // Masukkan objek dummy dengan id null
-        for (let i = 0; i < numByes; i++) {
-            shuffledParticipants.push({ id: null, nama_peserta: 'BYE' });
-        }
-
-        // --- 3. SHUFFLE TOTAL (Peserta Asli + Peserta Hantu) ---
         for (let i = shuffledParticipants.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [shuffledParticipants[i], shuffledParticipants[j]] = [shuffledParticipants[j], shuffledParticipants[i]];
         }
 
         const matchesToInsert = [];
+        const numMatches = targetSlots / 2; // Jumlah pertandingan di Babak 1
+
+        // Siapkan mangkok kosong untuk Babak 1
+        for(let i = 0; i < numMatches; i++) {
+            matchesToInsert.push({ babak: 1, pemain1_id: null, pemain2_id: null });
+        }
+
+        // --- 4. DISTRIBUSI PESERTA (ANTI BYE VS BYE) ---
+        let participantIndex = 0;
         
-        // --- 4. BIKIN SLOT BABAK 1 (Akan ada yang melawan NULL/BYE) ---
-        for (let i = 0; i < targetSlots; i += 2) {
-            matchesToInsert.push({
-                babak: 1,
-                pemain1_id: shuffledParticipants[i].id,
-                pemain2_id: shuffledParticipants[i + 1].id
-            });
+        // Putaran pertama: Isi slot kiri (pemain 1) di setiap pertandingan
+        for(let i = 0; i < numMatches; i++){
+            if(participantIndex < shuffledParticipants.length){
+                matchesToInsert[i].pemain1_id = shuffledParticipants[participantIndex].id;
+                participantIndex++;
+            }
+        }
+        
+        // Putaran kedua: Isi slot kanan (pemain 2) dari sisa peserta
+        for(let i = 0; i < numMatches; i++){
+            if(participantIndex < shuffledParticipants.length){
+                matchesToInsert[i].pemain2_id = shuffledParticipants[participantIndex].id;
+                participantIndex++;
+            }
         }
 
         // --- 5. BIKIN SLOT BABAK SELANJUTNYA (Bagan Sempurna) ---
         let babakSekarang = 2;
-        let sisaMatch = targetSlots / 2; // Pasti pas dibagi 2!
+        let sisaMatch = targetSlots / 2;
         
         while (sisaMatch > 1) {
             sisaMatch = sisaMatch / 2;
