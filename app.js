@@ -20,7 +20,9 @@ const __dirname = path.dirname(__filename);
 // middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:5501', 'https://tournamentms-pi.vercel.app']
+}));
 app.use(methodOverride());
 app.use(express.static(path.join(__dirname, 'public')));
 
